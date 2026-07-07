@@ -1,5 +1,6 @@
 import { User } from "../types/User";
 import { recursiveFindUserByUsername } from "../Utils/recursiveSearch";
+import { AppError } from "../errors/AppError";
 
 export class UserStore {
     private users: User[] = [];   //list of users
@@ -7,6 +8,12 @@ export class UserStore {
 
     // Create a new user
     createUser(username: string, password: string, email?: string): User {
+        const existing = this.findByUsername(username);
+
+        if (existing) {
+            throw new AppError("User already exists", 409);
+        }
+
         const newUser: User = {
             id: this.nextId++,
             username,
