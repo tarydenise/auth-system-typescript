@@ -22,13 +22,33 @@ router.post("/register", async (req, res) => {
       return res.status(409).json({ error: "User already exists" });
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 100)); // Simulate delay
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const newUser = userStore.createUser(username, password, email);
 
     res.status(201).json({ message: "User created successfully", user: newUser });
   } catch (error) {
     console.error("Error in /register:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// LOGIN
+router.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    const user = userStore.findByUsername(username);
+
+    if (!user || user.password !== password) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    res.json({ message: "Login successful", userId: user.id });
+  } catch (error) {
+    console.error("Error in /login:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
