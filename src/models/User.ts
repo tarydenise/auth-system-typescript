@@ -1,4 +1,5 @@
 import { User } from "../types/User";
+import { recursiveFindUserByUsername } from "../Utils/recursiveSearch";
 
 export class UserStore {
     private users: User[] = [];   //list of users
@@ -27,7 +28,7 @@ export class UserStore {
 
     // Find user by username
     findByUsername(username: string): User | undefined {
-        return this.users.find((u) => u.username === username);
+        return recursiveFindUserByUsername(this.users, username);
     }
 
     // Find user by ID
