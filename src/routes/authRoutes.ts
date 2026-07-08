@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { UserStore } from "../models/User";
+import { AppError } from "../errors/AppError";
 
 const router = Router();
 const userStore = new UserStore();
@@ -14,12 +15,7 @@ router.post("/register", async (req, res) => {
     const { username, password, email } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ error: "Username and password are required" });
-    }
-
-    const existingUser = userStore.findByUsername(username);
-    if (existingUser) {
-      return res.status(409).json({ error: "User already exists" });
+      throw new AppError("Username and password are required", 400);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 100));
@@ -27,8 +23,13 @@ router.post("/register", async (req, res) => {
     const newUser = userStore.createUser(username, password, email);
 
     res.status(201).json({ message: "User created successfully", user: newUser });
-  } catch (error) {
-    console.error("Error in /register:", error);
+  } catch (error: any) {
+    console.error("Error in /register:", error.message);
+
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -40,15 +41,24 @@ router.post("/login", async (req, res) => {
 
     const user = userStore.findByUsername(username);
 
-    if (!user || user.password !== password) {
-      return res.status(401).json({ error: "Invalid username or password" });
+    if (!user) {
+      throw new AppError("User not found", 404);
+    }
+
+    if (user.password !== password) {
+      throw new AppError("Invalid username or password", 401);
     }
 
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     res.json({ message: "Login successful", userId: user.id });
-  } catch (error) {
-    console.error("Error in /login:", error);
+  } catch (error: any) {
+    console.error("Error in /login:", error.message);
+
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ error: error.message });
+    }
+
     res.status(500).json({ error: "Internal server error" });
   }
 });
